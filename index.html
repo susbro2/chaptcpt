@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT-5 Launch: An Interactive Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral Harmony -->
+    <!-- Application Structure Plan: A thematic, single-page dashboard design was chosen to transform the linear report into an engaging, non-linear exploration. The structure uses a sticky top navigation for easy access to key sections: 'Overview', 'Capabilities', 'Competition', 'Impact', and 'Recommendations'. This architecture prioritizes user-driven discovery over passive reading. Key interactions include a dynamic line chart for market sentiment, a comparative bar chart for coding benchmarks, and tabbed interfaces for focused content exploration. This design choice makes complex information digestible by breaking it into interactive, thematic chunks, guiding the user through the report's core narratives—technology, performance, and market dynamics—in a visually compelling way. -->
+    <!-- Visualization & Content Choices: 
+        - Market Reaction (Report Info) -> Goal: Show change over time -> Viz: Line Chart (Chart.js) -> Interaction: Hover for details -> Justification: The dramatic flip in prediction market odds is the most powerful quantitative story in the report; a line chart is the clearest way to visualize this time-sensitive data.
+        - Coding Benchmarks (Report Info) -> Goal: Compare performance -> Viz: Horizontal Bar Chart (Chart.js) -> Interaction: Static display with clear labels -> Justification: A bar chart provides an immediate, unambiguous comparison of the SWE-bench scores between GPT-5 and Claude, directly addressing the report's finding of specialized performance.
+        - Corporate Structure (Report Info) -> Goal: Organize complexity -> Viz: HTML/CSS Diagram -> Interaction: Static visual aid -> Justification: A simple visual flow diagram made with Tailwind's flexbox and borders clarifies the complex evolution of OpenAI's corporate status more effectively than text alone.
+        - Capabilities (Report Info) -> Goal: Organize detailed features -> Viz: Tabbed Content Blocks (HTML/JS) -> Interaction: Click to switch views -> Justification: Tabs for 'Coding', 'Healthcare', and 'Ethics' prevent information overload, allowing the user to focus on one specific capability at a time within a clean UI.
+        - Societal Risks (Report Info) -> Goal: Inform and warn -> Viz: Icon-driven Info Cards (HTML/CSS) -> Interaction: Static display -> Justification: Using simple icons and brief text on cards makes the abstract risks more concrete and easily scannable for the user.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #333;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #3B82F6;
+            border-bottom-color: #3B82F6;
+        }
+        .tab-button.active {
+            border-color: #3B82F6;
+            background-color: #EFF6FF;
+            color: #1E40AF;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .card-flip {
+            perspective: 1000px;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card-flip:hover .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid #E5E7EB;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: #F9FAFB;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="sticky top-0 bg-white/80 backdrop-blur-lg z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800">GPT-5 Analysis</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent">Overview</a>
+                        <a href="#capabilities" class="nav-link px-3 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent">Capabilities</a>
+                        <a href="#competition" class="nav-link px-3 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent">Competition</a>
+                        <a href="#impact" class="nav-link px-3 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent">Impact</a>
+                        <a href="#recommendations" class="nav-link px-3 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent">Recommendations</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <select id="mobile-nav" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        <option value="#overview">Overview</option>
+                        <option value="#capabilities">Capabilities</option>
+                        <option value="#competition">Competition</option>
+                        <option value="#impact">Impact</option>
+                        <option value="#recommendations">Recommendations</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <section id="overview" class="mb-16 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">The GPT-5 Launch: A Critical Moment in AI</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">The launch of OpenAI's GPT-5 signifies a major evolution in AI, introducing a more unified, reliable, and capable system. However, market reception and competitive advancements reveal a complex and unpredictable landscape. This interactive analysis explores the key facets of the launch.</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 mb-16">
+                <div class="card-flip h-64">
+                    <div class="card-inner">
+                        <div class="card-front bg-white">
+                            <span class="text-4xl mb-2">⚙️</span>
+                            <h3 class="text-xl font-semibold text-gray-800">Unified System</h3>
+                            <p class="text-gray-500 text-center mt-2">A seamless architecture that intelligently routes tasks.</p>
+                        </div>
+                        <div class="card-back">
+                            <p class="text-sm text-gray-700 text-center">GPT-5 replaces the manual model-picker with a "real-time decision router," automatically choosing between fast responses and deep reasoning to optimize performance and user experience.</p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="card-flip h-64">
+                    <div class="card-inner">
+                        <div class="card-front bg-white">
+                            <span class="text-4xl mb-2">🚀</span>
+                            <h3 class="text-xl font-semibold text-gray-800">Performance Leap</h3>
+                            <p class="text-gray-500 text-center mt-2">Enhanced reasoning and reduced hallucinations.</p>
+                        </div>
+                        <div class="card-back">
+                            <p class="text-sm text-gray-700 text-center">Trained to "think" before responding, GPT-5 offers greater factual consistency and instruction-following, positioning it as a more reliable tool for professional, high-stakes applications.</p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="card-flip h-64">
+                    <div class="card-inner">
+                        <div class="card-front bg-white">
+                            <span class="text-4xl mb-2">🤔</span>
+                            <h3 class="text-xl font-semibold text-gray-800">AGI & Ethics</h3>
+                            <p class="text-gray-500 text-center mt-2">Altman's "Manhattan Project" analogy signals deep concern.</p>
+                        </div>
+                        <div class="card-back">
+                            <p class="text-sm text-gray-700 text-center">The rhetoric surrounding the launch frames AI development as an existential race, highlighting immense power while pleading for regulatory oversight in a field moving "very fast."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-2xl font-bold text-center text-gray-800 mb-2">Market Verdict: A Real-Time Shift in Confidence</h3>
+                <p class="text-center text-gray-600 mb-6 max-w-2xl mx-auto">Prediction markets delivered a swift judgment during the launch event, dramatically shifting confidence from OpenAI to Google, suggesting the launch was seen as incremental, not revolutionary.</p>
+                <div class="chart-container">
+                    <canvas id="marketSentimentChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="capabilities" class="mb-16 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Enhanced Capabilities & Use Cases</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">GPT-5 introduces specialized skills for developers, healthcare professionals, and everyday users, with a renewed focus on safety and ethical design.</p>
+            </div>
+
+            <div class="w-full max-w-4xl mx-auto">
+                <div class="mb-6 flex justify-center border-b border-gray-200">
+                    <button data-tab="coding" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-500 border-b-2 border-transparent -mb-px hover:text-blue-600 hover:border-blue-300">💻 Coding & Design</button>
+                    <button data-tab="healthcare" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-500 border-b-2 border-transparent -mb-px hover:text-blue-600 hover:border-blue-300">🩺 Healthcare Support</button>
+                    <button data-tab="ethics" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-500 border-b-2 border-transparent -mb-px hover:text-blue-600 hover:border-blue-300">🛡️ Ethical Design</button>
+                </div>
+
+                <div id="coding" class="tab-content">
+                    <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div class="bg-white p-6 rounded-xl shadow-md">
+                            <h4 class="text-xl font-semibold text-gray-800 mb-3">Benchmark: Complex Debugging</h4>
+                             <p class="text-gray-600 mb-4 text-sm">While GPT-5 excels at rapid front-end generation, Anthropic's Claude Opus 4.1 maintains a lead in high-precision debugging, according to SWE-bench Verified scores.</p>
+                            <div class="chart-container h-64 max-h-64">
+                                <canvas id="codingBenchmarkChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="prose prose-blue">
+                            <h4 class="text-xl font-semibold text-gray-800">A New Standard for Developers</h4>
+                            <p>GPT-5 is a powerhouse for generating high-quality, functional code in a single prompt. It fluently handles both design and logic, drastically reducing iteration time for front-end development and prototyping.</p>
+                            <p>This performance split suggests a future of specialized, multi-model workflows: GPT-5 for speed and design, and Claude for deep, surgical debugging.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="healthcare" class="tab-content">
+                     <div class="bg-white p-8 rounded-xl shadow-md text-center">
+                        <span class="text-5xl">❤️‍🩹</span>
+                        <h4 class="text-2xl font-bold text-gray-800 mt-4 mb-2">A Tool for Triage, Not Treatment</h4>
+                        <p class="text-gray-600 max-w-2xl mx-auto mb-6">GPT-5 is designed with "more medical awareness" to help users understand complex terminology and identify potential health risks, empowering them to ask better questions and seek timely care.</p>
+                        <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-800 p-4 rounded-r-lg text-left">
+                           <p class="font-bold">Case Study: Carolina's Story</p>
+                           <p class="text-sm">A patient used GPT-5 to understand a complex biopsy report for three types of cancer. The model's clear explanation provided immediate emotional relief and helped her prepare for her doctor's consultation, showcasing its role as a patient education and support tool.</p>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-6">Disclaimer: OpenAI explicitly states ChatGPT is not a substitute for professional medical advice, diagnosis, or treatment.</p>
+                    </div>
+                </div>
+
+                <div id="ethics" class="tab-content">
+                    <div class="bg-white p-8 rounded-xl shadow-md">
+                        <h4 class="text-2xl font-bold text-gray-800 text-center mb-6">From Oracle to "Thinking Partner"</h4>
+                        <div class="grid md:grid-cols-2 gap-6 text-center">
+                            <div class="border border-red-200 bg-red-50 p-4 rounded-lg">
+                                <h5 class="font-semibold text-red-800 mb-2">Old Approach (Risky)</h5>
+                                <p class="text-sm text-red-700">Providing direct, definitive answers to emotionally sensitive questions like "Should I leave my partner?", risking overdependence on a machine.</p>
+                            </div>
+                            <div class="border border-green-200 bg-green-50 p-4 rounded-lg">
+                                <h5 class="font-semibold text-green-800 mb-2">New Approach (Responsible)</h5>
+                                <p class="text-sm text-green-700">Offering non-directive, open-ended questions and encouraging users to consult trusted humans, redefining its role to help users navigate uncertainty.</p>
+                            </div>
+                        </div>
+                         <p class="text-center text-gray-600 mt-6 text-sm">This shift was informed by over 90 experts and reflects a new focus on responsible AI design, acknowledging that the most helpful action is sometimes not to answer directly.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="competition" class="mb-16 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">The Competitive Arena</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">The AI race is no longer about a single "smartest" model. It's a complex battle of specialized performance, strategic pricing, and powerful ecosystems.</p>
+            </div>
+            <div class="overflow-x-auto bg-white p-6 rounded-xl shadow-md">
+                <table class="w-full min-w-max text-left">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="p-4 font-semibold text-gray-700">Feature</th>
+                            <th class="p-4 font-semibold text-blue-700">OpenAI GPT-5</th>
+                            <th class="p-4 font-semibold text-purple-700">Anthropic Claude 4.1</th>
+                            <th class="p-4 font-semibold text-green-700">Google Gemini</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="p-4 font-medium">Best Use Case</td>
+                            <td class="p-4 text-blue-900">Rapid Prototyping & Front-End</td>
+                            <td class="p-4 text-purple-900">Complex Debugging & Refactoring</td>
+                            <td class="p-4 text-green-900">Ecosystem Integration & Search</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-4 font-medium">Key Strength</td>
+                            <td class="p-4 text-blue-900">Design & Logic Fluency</td>
+                            <td class="p-4 text-purple-900">Technical Precision (SWE-bench)</td>
+                            <td class="p-4 text-green-900">Proprietary Data & Infrastructure</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 font-medium">Pricing Strategy</td>
+                            <td class="p-4 text-blue-900">Tiered (Nano is low-cost leader)</td>
+                            <td class="p-4 text-purple-900">Competitive, but high token use on complex tasks</td>
+                            <td class="p-4 text-green-900">Aggressive low-cost options (Flash)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="impact" class="mb-16 scroll-mt-20">
+             <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Business & Societal Impact</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">OpenAI's evolving corporate strategy and the immense power of GPT-5 raise critical questions about its business model, accessibility, and the broader risks to society.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h4 class="text-xl font-semibold text-gray-800 mb-4 text-center">OpenAI's Corporate Evolution</h4>
+                    <div class="flex flex-col items-center space-y-4">
+                        <div class="p-3 rounded-lg border border-gray-300 bg-gray-50 text-center w-full">
+                            <p class="font-semibold">Non-Profit Origins</p>
+                            <p class="text-xs text-gray-500">Mission to benefit humanity</p>
+                        </div>
+                        <div class="text-2xl text-gray-400">↓</div>
+                        <div class="p-3 rounded-lg border border-yellow-400 bg-yellow-50 text-center w-full">
+                            <p class="font-semibold">For-Profit Entity</p>
+                            <p class="text-xs text-gray-500">Pressure from investors like Microsoft</p>
+                        </div>
+                        <div class="text-2xl text-gray-400">↓</div>
+                        <div class="p-3 rounded-lg border border-blue-400 bg-blue-50 text-center w-full">
+                            <p class="font-semibold">Public Benefit Corp (Goal)</p>
+                            <p class="text-xs text-gray-500">Balancing mission with profit</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h4 class="text-xl font-semibold text-gray-800 mb-4 text-center">Key Societal Risks</h4>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <span class="text-2xl mr-4 mt-1"> displacing_people </span>
+                            <div>
+                                <h5 class="font-semibold">Job Displacement</h5>
+                                <p class="text-sm text-gray-600">Automation of tasks in creative and analytical fields.</p>
+                            </div>
+                        </div>
+                         <div class="flex items-start">
+                            <span class="text-2xl mr-4 mt-1">🎭</span>
+                            <div>
+                                <h5 class="font-semibold">Misinformation & Fraud</h5>
+                                <p class="text-sm text-gray-600">Lowered barrier for creating deepfakes and conducting cyber attacks.</p>
+                            </div>
+                        </div>
+                         <div class="flex items-start">
+                            <span class="text-2xl mr-4 mt-1">🤖</span>
+                            <div>
+                                <h5 class="font-semibold">Emergent Autonomy</h5>
+                                <p class="text-sm text-gray-600">The potential for AI to function outside of human control.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="recommendations" class="scroll-mt-20">
+            <div class="bg-blue-900 text-white p-8 md:p-12 rounded-xl">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl md:text-4xl font-bold tracking-tight">Strategic Recommendations</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-blue-200">For professionals and enterprises navigating the new AI landscape.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8 text-center">
+                    <div class="bg-blue-800/50 p-6 rounded-lg">
+                        <span class="text-4xl">🧩</span>
+                        <h4 class="font-semibold text-xl mt-4 mb-2">Adopt a Multi-Model Strategy</h4>
+                        <p class="text-sm text-blue-200">Leverage different models for their specialized strengths. Use GPT-5 for rapid prototyping and Claude for critical, high-precision debugging to maximize efficiency and accuracy.</p>
+                    </div>
+                    <div class="bg-blue-800/50 p-6 rounded-lg">
+                        <span class="text-4xl">📜</span>
+                        <h4 class="font-semibold text-xl mt-4 mb-2">Focus on Internal Governance</h4>
+                        <p class="text-sm text-blue-200">Develop robust ethical frameworks for AI use. Treat AI as a "thinking partner" to aid decision-making, not as a definitive source of truth, building a more responsible internal culture.</p>
+                    </div>
+                    <div class="bg-blue-800/50 p-6 rounded-lg">
+                        <span class="text-4xl">🌍</span>
+                        <h4 class="font-semibold text-xl mt-4 mb-2">Monitor the Ecosystem</h4>
+                        <p class="text-sm text-blue-200">Look beyond model performance to the surrounding ecosystem. Track Google's integration and the pricing dynamics of all major players to find strategic cost and performance advantages.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-100 border-t border-gray-200">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
+            <p>Interactive analysis based on the report "Analysis of the OpenAI GPT-5 Launch: Capabilities, Competitive Dynamics, and Strategic Implications".</p>
+            <p>This is a conceptual visualization and does not represent an official OpenAI or competitor product.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const marketSentimentData = {
+                labels: ['Pre-Event', 'During Livestream', 'Post-Event'],
+                datasets: [{
+                    label: 'OpenAI Confidence',
+                    data: [80, 45, 18],
+                    borderColor: '#3B82F6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Google Confidence',
+                    data: [20, 55, 77],
+                    borderColor: '#10B981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            };
+
+            const marketSentimentCtx = document.getElementById('marketSentimentChart').getContext('2d');
+            new Chart(marketSentimentCtx, {
+                type: 'line',
+                data: marketSentimentData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: { display: true, text: 'Prediction Market Odds (%)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { mode: 'index', intersect: false }
+                    }
+                }
+            });
+
+            const codingBenchmarkData = {
+                labels: ['Anthropic Claude Opus 4.1', 'OpenAI GPT-5'],
+                datasets: [{
+                    label: 'SWE-bench Verified Score (%)',
+                    data: [74.5, 60],
+                    backgroundColor: ['#8B5CF6', '#3B82F6'],
+                    borderColor: ['#7C3AED', '#2563EB'],
+                    borderWidth: 1
+                }]
+            };
+
+            const codingBenchmarkCtx = document.getElementById('codingBenchmarkChart').getContext('2d');
+            new Chart(codingBenchmarkCtx, {
+                type: 'bar',
+                data: codingBenchmarkData,
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false }
+                    }
+                }
+            });
+
+            const tabs = document.querySelectorAll('[data-tab]');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            function activateTab(tabId) {
+                tabs.forEach(button => {
+                    button.classList.toggle('active', button.dataset.tab === tabId);
+                });
+                tabContents.forEach(content => {
+                    content.classList.toggle('active', content.id === tabId);
+                });
+            }
+
+            tabs.forEach(button => {
+                button.addEventListener('click', () => {
+                    activateTab(button.dataset.tab);
+                });
+            });
+
+            activateTab('coding');
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+            const mobileNav = document.getElementById('mobile-nav');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.4
+            };
+
+            const sectionObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                        });
+                        if(mobileNav.value !== `#${id}`) {
+                           mobileNav.value = `#${id}`;
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                sectionObserver.observe(section);
+            });
+            
+            mobileNav.addEventListener('change', (e) => {
+                window.location.href = e.target.value;
+            });
+        });
+    </script>
+
+</body>
+</html>
